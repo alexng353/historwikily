@@ -25,12 +25,14 @@
   bar.style.bottom = '0';
   bar.style.left = '0';
   bar.style.width = '100%';
-  bar.style.background = '#f8f9fa';
-  bar.style.borderTop = '1px solid #ccc';
+  bar.style.background = 'var(--background-color-base, #f8f9fa)';
+  bar.style.borderTop = '1px solid var(--border-color-base, #ccc)';
   bar.style.padding = '8px 12px';
   bar.style.zIndex = '99999';
   bar.style.fontFamily = 'system-ui, sans-serif';
   bar.style.boxShadow = '0 -2px 4px rgba(0,0,0,0.1)';
+  bar.style.color = 'var(--color-base, #202122)';
+  bar.style.display = 'none';
 
   const style = document.createElement('style');
   style.textContent = `
@@ -38,9 +40,9 @@
       display: inline-block;
       width: 14px !important;
       height: 14px !important;
-      border: 2px solid #ccc;
+      border: 2px solid var(--border-color-base, #ccc);
       border-radius: 50%;
-      border-top-color: #0645ad;
+      border-top-color: var(--color-progressive, #0645ad);
       animation: spin 1s ease-in-out infinite;
       margin-right: 5px;
       vertical-align: middle;
@@ -51,17 +53,45 @@
     }
 
     .rev-check-icon {
-      color: #008000;
+      color: var(--color-success, #008000);
       margin-right: 5px;
       font-weight: bold;
       vertical-align: middle;
+    }
+
+    #revToggleBtn:hover {
+      background: rgba(0,0,0,0.12) !important;
+      transform: scale(1.1);
+    }
+
+    #revCollapseBtn:hover {
+      background: rgba(0,0,0,0.08) !important;
     }
   `;
   document.head.appendChild(style);
 
 
-  bar.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;"><div id="revMeta" style="font-size:14px;color:#202122;text-align:center;"><span id="revIndicator" class="rev-loading-spinner"></span> Loading revisions...</div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;width:70px;text-align:right;">Oldest</span><input id="revSlider" type="range" min="1" max="1" value="1" style="flex:1;appearance:none;height:6px;background:#d8dee9;border-radius:3px;cursor:pointer;"><span style="font-size:13px;width:70px;text-align:left;">Latest</span></div><div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;"><button id="btn-100" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">◄◄ -100</button><button id="btn-10" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">◄ -10</button><button id="btn-1" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">-1</button><button id="btn1" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">+1</button><button id="btn10" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">+10 ►</button><button id="btn100" style="padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid #a2a9b1;background:#fff;border-radius:2px;">+100 ►►</button></div></div>`;
+  const btnStyle = `padding:4px 8px;font-size:12px;cursor:pointer;border:1px solid var(--border-color-base, #a2a9b1);background:var(--background-color-base, #fff);color:var(--color-base, #202122);border-radius:2px;`;
+  bar.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;position:relative;"><span id="revCollapseBtn" style="position:absolute;top:-2px;right:24px;width:28px;height:28px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--color-subtle, #54595d);transition:background 0.15s;z-index:1;">⋯</span><div id="revMeta" style="font-size:14px;color:var(--color-base, #202122);text-align:center;"><span id="revIndicator" class="rev-loading-spinner"></span> Loading revisions...</div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;width:70px;text-align:right;">Oldest</span><input id="revSlider" type="range" min="1" max="1" value="1" style="flex:1;appearance:none;height:6px;background:var(--border-color-base, #d8dee9);border-radius:3px;cursor:pointer;"><span style="font-size:13px;width:70px;text-align:left;">Latest</span></div><div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;"><button id="btn-100" style="${btnStyle}">◄◄ -100</button><button id="btn-10" style="${btnStyle}">◄ -10</button><button id="btn-1" style="${btnStyle}">-1</button><button id="btn1" style="${btnStyle}">+1</button><button id="btn10" style="${btnStyle}">+10 ►</button><button id="btn100" style="${btnStyle}">+100 ►►</button></div></div>`;
   document.body.appendChild(bar);
+
+  const toggleBtn = document.createElement('div');
+  toggleBtn.id = 'revToggleBtn';
+  toggleBtn.textContent = '⋯';
+  toggleBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--background-color-base, #f8f9fa);border:1px solid var(--border-color-base, #ccc);box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100000;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--color-subtle, #54595d);transition:background 0.15s, transform 0.15s;';
+  document.body.appendChild(toggleBtn);
+
+  const collapseBtn = bar.querySelector('#revCollapseBtn');
+
+  toggleBtn.addEventListener('click', () => {
+    bar.style.display = '';
+    toggleBtn.style.display = 'none';
+  });
+
+  collapseBtn.addEventListener('click', () => {
+    bar.style.display = 'none';
+    toggleBtn.style.display = 'flex';
+  });
 
   const meta = bar.querySelector('#revMeta');
   const slider = bar.querySelector('#revSlider');
@@ -127,15 +157,15 @@
         <span id="revIndicator" class="${indicator.className}">${indicator.textContent}</span>
         <span style="font-weight:600;">Revision ${pos}${totalStr}</span>
         — <span>${formatDate(rev.timestamp)}</span>
-        — <span style="color:#0645ad;">${rev.user || 'anonymous'}</span>
-        ${rev.comment ? `<br><span style="color:#54595d;">${rev.comment}</span>` : '<br><span>&nbsp;</span>'}
+        — <span style="color:var(--color-progressive, #0645ad);">${rev.user || 'anonymous'}</span>
+        ${rev.comment ? `<br><span style="color:var(--color-subtle, #54595d);">${rev.comment}</span>` : '<br><span>&nbsp;</span>'}
       `;
       Object.assign(indicator, meta.querySelector('#revIndicator'));
       setIndicator(isLoading ? 'loading' : 'loaded');
     } else {
       meta.innerHTML = `
         <span id="revIndicator" class="${indicator.className}">${indicator.textContent}</span>
-        <span style="font-weight:600;">Revision ${pos}${totalStr}</span> — <span style="color:#72777d;">Loading...</span>
+        <span style="font-weight:600;">Revision ${pos}${totalStr}</span> — <span style="color:var(--color-subtle, #72777d);">Loading...</span>
       `;
       Object.assign(indicator, meta.querySelector('#revIndicator'));
       setIndicator(isLoading ? 'loading' : null);
